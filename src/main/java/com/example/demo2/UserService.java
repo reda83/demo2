@@ -6,7 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -19,18 +19,19 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User loginUser(User user)
+    public String loginUser(User user)
     {
         passwordEncoder = new BCryptPasswordEncoder();
-        User userInDatabBase;
+        User userInDataBase;
     if(!userRepository.findById(user.getEmail()).isEmpty())
     {
-        userInDatabBase= userRepository.findById(user.getEmail()).get();
+        userInDataBase= userRepository.findById(user.getEmail()).get();
 
-        if(passwordEncoder.matches(user.getPassword(),userInDatabBase.getPassword()))
+        if(passwordEncoder.matches(user.getPassword(),userInDataBase.getPassword()))
         {
-            userRepository.findByPassword(userInDatabBase.getPassword()).getPassword();
-            return userRepository.getUserByemailAndpassword(user.getEmail(),userInDatabBase.getPassword());
+            userRepository.findByPassword(userInDataBase.getPassword()).getPassword();
+//            return userRepository.getUserByemailAndpassword(user.getEmail(),userInDataBase.getPassword());
+            return "Signed In Successfully";
         }else
         {
             throw new NotFoundException(String.format("Wrong Password"));
@@ -55,12 +56,22 @@ public class UserService {
 
     }
 
-    public User addUser(User user)
+    public String addUser(User user)
     {
         passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword= this.passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
-        return userRepository.insert(user);
+        Optional<User> UserInDataBase;
+        UserInDataBase=userRepository.findById(user.getEmail());
+        if(UserInDataBase.isEmpty())
+        {
+            userRepository.insert(user);
+            return "New User has been added to the database";
+
+        }
+        else{
+            return "Already Registered";
+            }
     }
 
     public void deleteUser(String email)

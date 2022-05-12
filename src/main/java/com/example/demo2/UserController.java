@@ -15,16 +15,16 @@ public class UserController {
     public List<User> getAllUsers(){return userService.findAll();}
 
     @GetMapping("adminPanel/{email}")
-    public User getUserById(@PathVariable String email) throws Exception {return userService.getById(email);}
+    public User getUserById(@PathVariable String email) {return userService.getById(email);}
 
     @DeleteMapping("adminPanel/{email}")
     public void deleteUser(@PathVariable String email){userService.deleteUser(email);}
 
     @PostMapping(value = {"","/Register"})
-    public User createNewUser(@RequestBody User user) {return userService.addUser(user);}
+    public String createNewUser(@RequestBody User user) {return userService.addUser(user);}
 
     @PostMapping(value = {"","/login"})
-    public User Login(@RequestBody User user) throws Exception {return userService.loginUser(user);}
+    public String Login(@RequestBody User user) {return userService.loginUser(user);}
 
 
 
