@@ -1,6 +1,8 @@
 package com.example.demo2;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
+    PasswordEncoder passwordEncoder;
     @Autowired
     private UserRepository userRepository;
 
@@ -16,32 +19,47 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User loginUser(String email, String password)
+    public User loginUser(User user)
     {
-    try{   userRepository.findById(email).get();}
-    catch (NoSuchElementException ex)
-    {throw new NotFoundException(String.format("no record with this email [%s] was found",email));}
+        passwordEncoder = new BCryptPasswordEncoder();
+        User userInDatabBase;
+    if(!userRepository.findById(user.getEmail()).isEmpty())
+    {
+        userInDatabBase= userRepository.findById(user.getEmail()).get();
 
-    try{userRepository.findByPassword(password).getPassword();}
-    catch (Exception ex)
-    {throw new NotFoundException(String.format("Wrong Password"));}
+        if(passwordEncoder.matches(user.getPassword(),userInDatabBase.getPassword()))
+        {
+            userRepository.findByPassword(userInDatabBase.getPassword()).getPassword();
+            return userRepository.getUserByemailAndpassword(user.getEmail(),userInDatabBase.getPassword());
+        }else
+        {
+            throw new NotFoundException(String.format("Wrong Password"));
+        }
+    }else
+    {
+        throw new NotFoundException(String.format("no record with this email [%s] was found",user.getEmail()));
+    }
 
-    return userRepository.getUserByemailAndpassword(email,password);
+
     }
     public User getById(String email)
     {
+    if(userRepository.findById(email).isPresent())
+    {
+        return userRepository.findById(email).get();
+    }else
+    {
+        throw new NotFoundException(String.format("no record with this email [%s] was found",email));
+    }
 
-        try {
-            return userRepository.findById(email).get();
-        }
-        catch (NoSuchElementException ex)
-        {
-            throw new NotFoundException(String.format("no record with this email [%s] was found",email));
-        }
+
     }
 
     public User addUser(User user)
     {
+        passwordEncoder = new BCryptPasswordEncoder();
+        String encodedPassword= this.passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
         return userRepository.insert(user);
     }
 
